@@ -14,6 +14,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.test.context.ActiveProfiles;
 
 import java.util.List;
+import java.util.Map;
 import java.util.stream.Collectors;
 import java.util.stream.IntStream;
 
@@ -142,7 +143,7 @@ public class UserControllerTest {
     @Test
     public void postUser_whenUserHasPasswordWithAllLowercase_receiveBadRequest() {
         User user = createValidUser();
-        user.setPassword( "alllowercase");
+        user.setPassword("alllowercase");
         ResponseEntity<Object> response = postSignup(user, Object.class);
         assertThat(response.getStatusCode()).isEqualTo(HttpStatus.BAD_REQUEST);
     }
@@ -150,7 +151,7 @@ public class UserControllerTest {
     @Test
     public void postUser_whenUserHasPasswordWithAllUppercase_receiveBadRequest() {
         User user = createValidUser();
-        user.setPassword( "ALLUPPERCASE");
+        user.setPassword("ALLUPPERCASE");
         ResponseEntity<Object> response = postSignup(user, Object.class);
         assertThat(response.getStatusCode()).isEqualTo(HttpStatus.BAD_REQUEST);
     }
@@ -158,7 +159,7 @@ public class UserControllerTest {
     @Test
     public void postUser_whenUserHasPasswordWithAllNumber_receiveBadRequest() {
         User user = createValidUser();
-        user.setPassword( "123456789");
+        user.setPassword("123456789");
         ResponseEntity<Object> response = postSignup(user, Object.class);
         assertThat(response.getStatusCode()).isEqualTo(HttpStatus.BAD_REQUEST);
     }
@@ -175,6 +176,47 @@ public class UserControllerTest {
         User user = new User();
         ResponseEntity<ApiError> response = postSignup(user, ApiError.class);
         assertThat(response.getBody().getValidationErrors().size()).isEqualTo(3);
+    }
+
+    @Test
+    public void postUser_whenUserHasNullUsername_receiveMessageOfNullErrorForUsername() {
+        User user = createValidUser();
+        user.setUsername(null);
+        ResponseEntity<ApiError> response = postSignup(user, ApiError.class);
+        Map<String, String> validationErrors = response.getBody().getValidationErrors();
+        // english берет только если передать хедер "Accept-Language: en", по дефолту rus
+        assertThat(validationErrors.get("username")).isEqualTo("Username не может быть null");
+    }
+
+    @Test
+    public void postUser_whenUserHasNullPassword_receiveGenericMessageOfNullError() {
+        User user = createValidUser();
+        user.setPassword(null);
+        ResponseEntity<ApiError> response = postSignup(user, ApiError.class);
+        Map<String, String> validationErrors = response.getBody().getValidationErrors();
+        // english берет только если передать хедер "Accept-Language: en", по дефолту rus
+        assertThat(validationErrors.get("password")).isEqualTo("Не может быть null");
+    }
+
+    @Test
+    public void postUser_whenUserHasInvalidLengthUsername_receiveGenericMessageOfSizeError() {
+        User user = createValidUser();
+        user.setUsername("abc");
+        ResponseEntity<ApiError> response = postSignup(user, ApiError.class);
+        Map<String, String> validationErrors = response.getBody().getValidationErrors();
+        // english берет только если передать хедер "Accept-Language: en", по дефолту rus
+        assertThat(validationErrors.get("username")).isEqualTo("Должно быть минимум 4 и максимум 255 символов");
+    }
+
+    @Test
+    public void postUser_whenUserHasInvalidPasswordPattern_receiveMessageOfPasswordPatternError() {
+        User user = createValidUser();
+        user.setPassword("alllowercase");
+        ResponseEntity<ApiError> response = postSignup(user, ApiError.class);
+        Map<String, String> validationErrors = response.getBody().getValidationErrors();
+        // english берет только если передать хедер "Accept-Language: en", по дефолту rus
+        assertThat(validationErrors.get("password")).isEqualTo(
+                "Пароль должен содержать как минимум 1 символ верхнего регистра, 1 символ нижнего регистра и 1 цифру");
     }
 
     public <T> ResponseEntity<T> postSignup(Object request, Class<T> response) {
