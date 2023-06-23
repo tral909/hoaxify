@@ -32,7 +32,7 @@ public class UserControllerTest {
 
     @BeforeEach
     void cleanup() {
-        //userRepository.deleteAll();
+        userRepository.deleteAll();
     }
 
     @Test
@@ -217,6 +217,23 @@ public class UserControllerTest {
         // english берет только если передать хедер "Accept-Language: en", по дефолту rus
         assertThat(validationErrors.get("password")).isEqualTo(
                 "Пароль должен содержать как минимум 1 символ верхнего регистра, 1 символ нижнего регистра и 1 цифру");
+    }
+
+    @Test
+    public void postUser_whenAnotherUserHasSameUsername_receiveBadRequest() {
+        userRepository.save(createValidUser());
+        User user = createValidUser();
+        ResponseEntity<Object> response = postSignup(user, Object.class);
+        assertThat(response.getStatusCode()).isEqualTo(HttpStatus.BAD_REQUEST);
+    }
+
+    @Test
+    public void postUser_whenAnotherUserHasSameUsername_receiveMessageOfDuplicateUsername() {
+        userRepository.save(createValidUser());
+        User user = createValidUser();
+        ResponseEntity<ApiError> response = postSignup(user, ApiError.class);
+        Map<String, String> validationErrors = response.getBody().getValidationErrors();
+        assertThat(validationErrors.get("username")).isEqualTo("Это имя пользователя занято");
     }
 
     public <T> ResponseEntity<T> postSignup(Object request, Class<T> response) {
