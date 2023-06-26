@@ -24,7 +24,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 @ActiveProfiles("test")
 public class UserControllerTest {
 
-    static final String API_1_0_USERS = "/api/1.0/users";
+    private static final String API_1_0_USERS = "/api/1.0/users";
     @Autowired
     TestRestTemplate testRestTemplate;
     @Autowired
