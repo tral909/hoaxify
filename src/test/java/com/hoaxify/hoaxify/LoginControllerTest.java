@@ -1,6 +1,9 @@
 package com.hoaxify.hoaxify;
 
 import com.hoaxify.hoaxify.error.ApiError;
+import com.hoaxify.hoaxify.user.UserRepository;
+import com.hoaxify.hoaxify.user.UserService;
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
@@ -20,6 +23,18 @@ public class LoginControllerTest {
 
     @Autowired
     TestRestTemplate testRestTemplate;
+
+    @Autowired
+    UserRepository userRepository;
+
+    @Autowired
+    UserService userService;
+
+    @BeforeEach
+    void cleanup() {
+        userRepository.deleteAll();
+        testRestTemplate.getRestTemplate().getInterceptors().clear();
+    }
 
     @Test
     public void postLogin_withoutUserCredentials_receiveUnauthorized() {
@@ -51,6 +66,14 @@ public class LoginControllerTest {
         authenticate();
         ResponseEntity<Object> response = login(Object.class);
         assertThat(response.getHeaders().containsKey("WWW-Authenticate")).isFalse();
+    }
+
+    @Test
+    public void postLogin_withValidCredentials_receiveOk() {
+        userService.save(TestUtils.createValidUser());
+        authenticate();
+        ResponseEntity<Object> response = login(Object.class);
+        assertThat(response.getStatusCode()).isEqualTo(HttpStatus.OK);
     }
 
     private void authenticate() {
