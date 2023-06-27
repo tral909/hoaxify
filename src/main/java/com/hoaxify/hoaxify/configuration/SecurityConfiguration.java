@@ -13,6 +13,7 @@ public class SecurityConfiguration extends WebSecurityConfigurerAdapter {
         http
                 .csrf().disable()
                 .httpBasic()
+                .authenticationEntryPoint(new BasicAuthenticationEntryPoint())
                 .and()
                 .authorizeRequests().antMatchers(HttpMethod.POST, "/api/1.0/login").authenticated()
                 .and()
