@@ -29,6 +29,6 @@ public class UserService {
 
     public Page<?> getUsers() {
         Pageable pageable = PageRequest.of(0, 10);
-        return userRepository.findAll(pageable);
+        return userRepository.getAllUsersProjection(pageable);
     }
 }
