@@ -5,6 +5,7 @@ import com.hoaxify.hoaxify.shared.GenericResponse;
 import com.hoaxify.hoaxify.user.vm.UserVM;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.http.HttpStatus;
 import org.springframework.validation.BindingResult;
 import org.springframework.validation.FieldError;
@@ -36,8 +37,8 @@ public class UserController {
     }
 
     @GetMapping("users")
-    Page<UserVM> getUsers() {
-        return userService.getUsers().map(UserVM::new);
+    Page<UserVM> getUsers(/*@PageableDefault(size = 10)*/ Pageable pageable) {
+        return userService.getUsers(pageable).map(UserVM::new);
     }
 
     @ExceptionHandler({MethodArgumentNotValidException.class})

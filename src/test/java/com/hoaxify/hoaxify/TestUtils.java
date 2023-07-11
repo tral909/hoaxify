@@ -12,4 +12,10 @@ public class TestUtils {
         user.setImage("profile-image.png");
         return user;
     }
+
+    static User createValidUser(String username) {
+        User user = createValidUser();
+        user.setUsername(username);
+        return user;
+    }
 }
