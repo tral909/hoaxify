@@ -4,6 +4,7 @@ import com.hoaxify.hoaxify.error.ApiError;
 import com.hoaxify.hoaxify.shared.GenericResponse;
 import com.hoaxify.hoaxify.user.User;
 import com.hoaxify.hoaxify.user.UserRepository;
+import com.hoaxify.hoaxify.user.UserService;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -13,6 +14,7 @@ import org.springframework.core.ParameterizedTypeReference;
 import org.springframework.http.HttpMethod;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.http.client.support.BasicAuthenticationInterceptor;
 import org.springframework.test.context.ActiveProfiles;
 
 import java.util.List;
@@ -32,6 +34,8 @@ public class UserControllerTest {
     TestRestTemplate testRestTemplate;
     @Autowired
     UserRepository userRepository;
+    @Autowired
+    UserService userService;
 
     @BeforeEach
     void cleanup() {
@@ -303,6 +307,21 @@ public class UserControllerTest {
         String path = API_1_0_USERS + "?page=-5";
         ResponseEntity<TestPage<Object>> response = getUsers(path, new ParameterizedTypeReference<>(){});
         assertThat(response.getBody().getNumber()).isEqualTo(0);
+    }
+
+    @Test
+    public void getUsers_whenUserLoggedIn_receivePageWithoutLoggedInUser() {
+        userService.save(TestUtils.createValidUser("user1"));
+        userService.save(TestUtils.createValidUser("user2"));
+        userService.save(TestUtils.createValidUser("user3"));
+        authenticate("user1");
+        ResponseEntity<TestPage<Object>> response = getUsers(new ParameterizedTypeReference<>(){});
+        assertThat(response.getBody().getTotalElements()).isEqualTo(2);
+    }
+
+    private void authenticate(String username) {
+        testRestTemplate.getRestTemplate().getInterceptors().add(
+                new BasicAuthenticationInterceptor(username, "P4ssword"));
     }
 
     public <T> ResponseEntity<T> postSignup(Object request, Class<T> response) {
