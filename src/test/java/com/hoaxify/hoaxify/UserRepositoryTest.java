@@ -35,7 +35,7 @@ public class UserRepositoryTest {
 
     @Test
     public void findByUsername_whenUserDoesNotExist_returnsNull() {
-        User inDB = userRepository.findByUsername("nonwxistinguser");
+        User inDB = userRepository.findByUsername("nonexistinguser");
         assertThat(inDB).isNull();
     }
 
