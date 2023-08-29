@@ -19,3 +19,6 @@ spring:
         max-page-size: 100
 #        page-parameter: currentPage
 #        size-parameter: pageSize
+
+hoaxify:
+  upload-path: uploads-test
