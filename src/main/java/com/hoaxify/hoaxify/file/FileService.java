@@ -2,6 +2,7 @@ package com.hoaxify.hoaxify.file;
 
 import com.hoaxify.hoaxify.configuration.AppConfiguration;
 import org.apache.commons.io.FileUtils;
+import org.apache.tika.Tika;
 import org.springframework.stereotype.Service;
 
 import java.io.File;
@@ -13,9 +14,11 @@ import java.util.UUID;
 public class FileService {
 
     AppConfiguration appConfiguration;
+    Tika tika;
 
     public FileService(AppConfiguration appConfiguration) {
         this.appConfiguration = appConfiguration;
+        this.tika = new Tika();
     }
 
     public String saveProfileImage(String base64Image) throws IOException {
@@ -24,5 +27,9 @@ public class FileService {
         File target = new File(appConfiguration.getFullProfileImagesPath() + "/" + imageName);
         FileUtils.writeByteArrayToFile(target, decodedBytes);
         return imageName;
+    }
+
+    public String detectType(byte[] fileArr) {
+        return tika.detect(fileArr);
     }
 }
