@@ -487,6 +487,46 @@ public class UserControllerTest {
         assertThat(response.getStatusCode()).isEqualTo(HttpStatus.BAD_REQUEST);
     }
 
+    @Test
+    public void putUser_withValidRequestBodyWithJPGImageFromAuthorizedUser_receiveOk() throws IOException {
+        User user = userService.save(TestUtils.createValidUser("user1"));
+        authenticate(user.getUsername());
+        UserUpdateVM updateUser = createValidUserUpdateVM();
+        String imageString = readFileToBase64("test-jpg.jpg");
+        updateUser.setImage(imageString);
+
+        HttpEntity<UserUpdateVM> requestEntity = new HttpEntity<>(updateUser);
+        ResponseEntity<UserVM> response = putUser(user.getId(), requestEntity, UserVM.class);
+        assertThat(response.getStatusCode()).isEqualTo(HttpStatus.OK);
+    }
+
+    @Test
+    public void putUser_withValidRequestBodyWithGIFImageFromAuthorizedUser_receiveBadRequest() throws IOException {
+        User user = userService.save(TestUtils.createValidUser("user1"));
+        authenticate(user.getUsername());
+        UserUpdateVM updateUser = createValidUserUpdateVM();
+        String imageString = readFileToBase64("test-gif.gif");
+        updateUser.setImage(imageString);
+
+        HttpEntity<UserUpdateVM> requestEntity = new HttpEntity<>(updateUser);
+        ResponseEntity<Object> response = putUser(user.getId(), requestEntity, Object.class);
+        assertThat(response.getStatusCode()).isEqualTo(HttpStatus.BAD_REQUEST);
+    }
+
+    @Test
+    public void putUser_withValidRequestBodyWithTXTImageFromAuthorizedUser_receiveValidationErrorForProfileImage() throws IOException {
+        User user = userService.save(TestUtils.createValidUser("user1"));
+        authenticate(user.getUsername());
+        UserUpdateVM updateUser = createValidUserUpdateVM();
+        String imageString = readFileToBase64("test-txt.txt");
+        updateUser.setImage(imageString);
+
+        HttpEntity<UserUpdateVM> requestEntity = new HttpEntity<>(updateUser);
+        ResponseEntity<ApiError> response = putUser(user.getId(), requestEntity, ApiError.class);
+        Map<String, String> validationErrors = response.getBody().getValidationErrors();
+        assertThat(validationErrors.get("image")).isEqualTo("Only PNG and JPG files are allowed");
+    }
+
     private String readFileToBase64(String fileName) throws IOException {
         ClassPathResource imageResource = new ClassPathResource(fileName);
         byte[] imageArr = FileUtils.readFileToByteArray(imageResource.getFile());
