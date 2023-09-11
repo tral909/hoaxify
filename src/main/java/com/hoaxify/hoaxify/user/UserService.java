@@ -50,11 +50,12 @@ public class UserService {
     }
 
     public User update(long id, UserUpdateVM userUpdate) {
-        User inDB = userRepository.getOne(id);
+        User inDB = userRepository.getReferenceById(id);
         inDB.setDisplayName(userUpdate.getDisplayName());
         if (userUpdate.getImage() != null) {
             try {
                 String savedImageName = fileService.saveProfileImage(userUpdate.getImage());
+                fileService.deleteProfileImage(inDB.getImage());
                 inDB.setImage(savedImageName);
             } catch (IOException e) {
                 e.printStackTrace();
