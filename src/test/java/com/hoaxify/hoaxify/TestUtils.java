@@ -1,5 +1,6 @@
 package com.hoaxify.hoaxify;
 
+import com.hoaxify.hoaxify.hoax.Hoax;
 import com.hoaxify.hoaxify.user.User;
 
 public class TestUtils {
@@ -17,5 +18,11 @@ public class TestUtils {
         User user = createValidUser();
         user.setUsername(username);
         return user;
+    }
+
+    static Hoax createValidHoax() {
+        Hoax hoax = new Hoax();
+        hoax.setContent("test content for the test hoax");
+        return hoax;
     }
 }
