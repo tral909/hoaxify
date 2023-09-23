@@ -2,6 +2,7 @@ package com.hoaxify.hoaxify;
 
 import com.hoaxify.hoaxify.error.ApiError;
 import com.hoaxify.hoaxify.hoax.Hoax;
+import com.hoaxify.hoaxify.hoax.HoaxRepository;
 import com.hoaxify.hoaxify.user.UserRepository;
 import com.hoaxify.hoaxify.user.UserService;
 import org.junit.jupiter.api.BeforeEach;
@@ -27,9 +28,12 @@ public class HoaxControllerTest {
     UserRepository userRepository;
     @Autowired
     UserService userService;
+    @Autowired
+    HoaxRepository hoaxRepository;
 
     @BeforeEach
     void cleanup() {
+        hoaxRepository.deleteAll();
         userRepository.deleteAll();
         testRestTemplate.getRestTemplate().getInterceptors().clear();
     }
@@ -55,6 +59,27 @@ public class HoaxControllerTest {
         Hoax hoax = TestUtils.createValidHoax();
         ResponseEntity<ApiError> response = postHoax(hoax, ApiError.class);
         assertThat(response.getBody().getStatus()).isEqualTo(HttpStatus.UNAUTHORIZED.value());
+    }
+
+    @Test
+    public void postHoax_whenHoaxIsValidAndUserIsAuthorized_hoaxSavedToDatabase() {
+        userService.save(TestUtils.createValidUser("user1"));
+        authenticate("user1");
+        Hoax hoax = TestUtils.createValidHoax();
+        postHoax(hoax, Object.class);
+        assertThat(hoaxRepository.count()).isEqualTo(1);
+    }
+
+    @Test
+    public void postHoax_whenHoaxIsValidAndUserIsAuthorized_hoaxSavedToDatabaseWithTimestamp() {
+        userService.save(TestUtils.createValidUser("user1"));
+        authenticate("user1");
+        Hoax hoax = TestUtils.createValidHoax();
+        postHoax(hoax, Object.class);
+
+        Hoax inDB = hoaxRepository.findAll().get(0);
+
+        assertThat(inDB.getTimestamp()).isNotNull();
     }
 
     private <T> ResponseEntity<T> postHoax(Hoax hoax, Class<T> responseType) {
