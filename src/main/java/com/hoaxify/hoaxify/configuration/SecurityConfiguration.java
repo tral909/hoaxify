@@ -23,6 +23,7 @@ public class SecurityConfiguration extends WebSecurityConfigurerAdapter {
     protected void configure(HttpSecurity http) throws Exception {
         http
                 .csrf().disable()
+                .headers().disable()
                 .httpBasic()
                 .authenticationEntryPoint(new BasicAuthenticationEntryPoint())
                 .and()

@@ -1,5 +1,7 @@
 package com.hoaxify.hoaxify.hoax;
 
+import com.hoaxify.hoaxify.shared.CurrentUser;
+import com.hoaxify.hoaxify.user.User;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
@@ -16,7 +18,7 @@ public class HoaxController {
     HoaxService hoaxService;
 
     @PostMapping("/hoaxes")
-    void createHoax(@Valid @RequestBody Hoax hoax) {
-        hoaxService.save(hoax);
+    void createHoax(@Valid @RequestBody Hoax hoax, @CurrentUser User user) {
+        hoaxService.save(user, hoax);
     }
 }
