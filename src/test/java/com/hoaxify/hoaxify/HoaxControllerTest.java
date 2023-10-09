@@ -16,6 +16,10 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.http.client.support.BasicAuthenticationInterceptor;
 import org.springframework.test.context.ActiveProfiles;
 
+import javax.persistence.EntityManager;
+import javax.persistence.EntityManagerFactory;
+import javax.persistence.PersistenceUnit;
+import java.util.HashMap;
 import java.util.Map;
 import java.util.stream.Collectors;
 import java.util.stream.IntStream;
@@ -35,6 +39,8 @@ public class HoaxControllerTest {
     UserService userService;
     @Autowired
     HoaxRepository hoaxRepository;
+    @PersistenceUnit
+    EntityManagerFactory entityManagerFactory;
 
     @BeforeEach
     void cleanup() {
@@ -152,16 +158,19 @@ public class HoaxControllerTest {
 
     @Test
     public void postHoax_whenHoaxIsValidAndUserIsAuthorized_hoaxCanBeAccessedFromUserEntity() {
-        userService.save(TestUtils.createValidUser("user1"));
+        User user = userService.save(TestUtils.createValidUser("user1"));
         authenticate("user1");
         Hoax hoax = TestUtils.createValidHoax();
         postHoax(hoax, Object.class);
-
-        User inDBUser = userRepository.findByUsername("user1");
+        EntityManager entityManager = entityManagerFactory.createEntityManager();
+        User inDBUser = entityManager.find(User.class, user.getId());
         assertThat(inDBUser.getHoaxes().size()).isEqualTo(1);
     }
 
     private <T> ResponseEntity<T> postHoax(Hoax hoax, Class<T> responseType) {
+        var map = new HashMap<String, Integer>();
+        map.merge("1", 2, (prev, cur) -> null);
+        map.entrySet().iterator().next().getValue();
         return testRestTemplate.postForEntity(API_1_0_HOAXES, hoax, responseType);
     }
 
