@@ -385,6 +385,61 @@ public class HoaxControllerTest {
         assertThat(response.getBody().get(0).getDate()).isGreaterThan(0);
     }
 
+    @Test
+    public void getNewHoaxesOfUser_whenUserExistThereAreNoHoaxes_receiveOk() {
+        userService.save(TestUtils.createValidUser("user1"));
+        ResponseEntity<Object> response = getNewHoaxesOfUser(5, "user1", new ParameterizedTypeReference<>(){});
+        assertThat(response.getStatusCode()).isEqualTo(HttpStatus.OK);
+    }
+
+    @Test
+    public void getNewHoaxesOfUser_whenUserExistAndThereAreHoaxes_receiveListWithItemsAfterProvidedId() {
+        User userWithThreeHoaxes = userService.save(TestUtils.createValidUser("user1"));
+        hoaxService.save(userWithThreeHoaxes, TestUtils.createValidHoax());
+        hoaxService.save(userWithThreeHoaxes, TestUtils.createValidHoax());
+        hoaxService.save(userWithThreeHoaxes, TestUtils.createValidHoax());
+        Hoax fourth = hoaxService.save(userWithThreeHoaxes, TestUtils.createValidHoax());
+        hoaxService.save(userWithThreeHoaxes, TestUtils.createValidHoax());
+
+        ResponseEntity<List<Object>> response = getNewHoaxesOfUser(fourth.getId(), "user1", new ParameterizedTypeReference<>(){});
+        assertThat(response.getBody().size()).isEqualTo(1);
+    }
+
+    @Test
+    public void getNewHoaxesOfUser_whenUserExistAndThereAreHoaxes_receiveListWithHoaxVMAfterProvidedId() {
+        User userWithThreeHoaxes = userService.save(TestUtils.createValidUser("user1"));
+        hoaxService.save(userWithThreeHoaxes, TestUtils.createValidHoax());
+        hoaxService.save(userWithThreeHoaxes, TestUtils.createValidHoax());
+        hoaxService.save(userWithThreeHoaxes, TestUtils.createValidHoax());
+        Hoax fourth = hoaxService.save(userWithThreeHoaxes, TestUtils.createValidHoax());
+        hoaxService.save(userWithThreeHoaxes, TestUtils.createValidHoax());
+
+        ResponseEntity<List<HoaxVM>> response = getNewHoaxesOfUser(fourth.getId(), "user1", new ParameterizedTypeReference<>(){});
+        assertThat(response.getBody().get(0).getDate()).isGreaterThan(0);
+    }
+
+
+    @Test
+    public void getNewHoaxesOfUser_whenUserDoesNotExistThereAreNoHoaxes_receiveNotFound() {
+        ResponseEntity<Object> response = getNewHoaxesOfUser(5, "user1", new ParameterizedTypeReference<>(){});
+        assertThat(response.getStatusCode()).isEqualTo(HttpStatus.NOT_FOUND);
+    }
+
+    @Test
+    public void getNewHoaxesOfUser_whenUserExistAndThereAreNoHoaxes_receiveListWithZeroItemsAfterProvidedId() {
+        User userWithThreeHoaxes = userService.save(TestUtils.createValidUser("user1"));
+        hoaxService.save(userWithThreeHoaxes, TestUtils.createValidHoax());
+        hoaxService.save(userWithThreeHoaxes, TestUtils.createValidHoax());
+        hoaxService.save(userWithThreeHoaxes, TestUtils.createValidHoax());
+        Hoax fourth = hoaxService.save(userWithThreeHoaxes, TestUtils.createValidHoax());
+        hoaxService.save(userWithThreeHoaxes, TestUtils.createValidHoax());
+
+        userService.save(TestUtils.createValidUser("user2"));
+
+        ResponseEntity<List<HoaxVM>> response = getNewHoaxesOfUser(fourth.getId(), "user2", new ParameterizedTypeReference<>(){});
+        assertThat(response.getBody().size()).isEqualTo(0);
+    }
+
     private <T> ResponseEntity<T> getNewHoaxes(long hoaxId, ParameterizedTypeReference<T> responseType) {
         String path = API_1_0_HOAXES + "/" + hoaxId + "?direction=after&sort=id,desc";
         return testRestTemplate.exchange(path, HttpMethod.GET,null, responseType);
@@ -392,6 +447,11 @@ public class HoaxControllerTest {
 
     private <T> ResponseEntity<T> getOldHoaxes(long hoaxId, ParameterizedTypeReference<T> responseType) {
         String path = API_1_0_HOAXES + "/" + hoaxId + "?direction=before&page=0&size=5&sort=id,desc";
+        return testRestTemplate.exchange(path, HttpMethod.GET,null, responseType);
+    }
+
+    private <T> ResponseEntity<T> getNewHoaxesOfUser(long hoaxId, String username, ParameterizedTypeReference<T> responseType) {
+        String path = "/api/1.0/users/" + username + "/hoaxes/" + hoaxId + "?direction=after&page=0&size=5&sort=id,desc";
         return testRestTemplate.exchange(path, HttpMethod.GET,null, responseType);
     }
 
