@@ -440,8 +440,44 @@ public class HoaxControllerTest {
         assertThat(response.getBody().size()).isEqualTo(0);
     }
 
+    @Test
+    public void getNewHoaxCount_whenThereAreHoaxes_receiveCountAfterProvidedId() {
+        User userWithThreeHoaxes = userService.save(TestUtils.createValidUser("user1"));
+        hoaxService.save(userWithThreeHoaxes, TestUtils.createValidHoax());
+        hoaxService.save(userWithThreeHoaxes, TestUtils.createValidHoax());
+        hoaxService.save(userWithThreeHoaxes, TestUtils.createValidHoax());
+        Hoax fourth = hoaxService.save(userWithThreeHoaxes, TestUtils.createValidHoax());
+        hoaxService.save(userWithThreeHoaxes, TestUtils.createValidHoax());
+
+        ResponseEntity<Map<String, Long>> response = getNewHoaxCount(fourth.getId(), new ParameterizedTypeReference<>(){});
+        assertThat(response.getBody().get("count")).isEqualTo(1);
+    }
+
+    @Test
+    public void getNewHoaxCountOfUser_whenThereAreHoaxes_receiveCountAfterProvidedId() {
+        User userWithThreeHoaxes = userService.save(TestUtils.createValidUser("user1"));
+        hoaxService.save(userWithThreeHoaxes, TestUtils.createValidHoax());
+        hoaxService.save(userWithThreeHoaxes, TestUtils.createValidHoax());
+        hoaxService.save(userWithThreeHoaxes, TestUtils.createValidHoax());
+        Hoax fourth = hoaxService.save(userWithThreeHoaxes, TestUtils.createValidHoax());
+        hoaxService.save(userWithThreeHoaxes, TestUtils.createValidHoax());
+
+        ResponseEntity<Map<String, Long>> response = getNewHoaxCountOfUser(fourth.getId(), "user1", new ParameterizedTypeReference<>(){});
+        assertThat(response.getBody().get("count")).isEqualTo(1);
+    }
+
     private <T> ResponseEntity<T> getNewHoaxes(long hoaxId, ParameterizedTypeReference<T> responseType) {
         String path = API_1_0_HOAXES + "/" + hoaxId + "?direction=after&sort=id,desc";
+        return testRestTemplate.exchange(path, HttpMethod.GET,null, responseType);
+    }
+
+    private <T> ResponseEntity<T> getNewHoaxCount(long hoaxId, ParameterizedTypeReference<T> responseType) {
+        String path = API_1_0_HOAXES + "/" + hoaxId + "?direction=after&count=true";
+        return testRestTemplate.exchange(path, HttpMethod.GET,null, responseType);
+    }
+
+    private <T> ResponseEntity<T> getNewHoaxCountOfUser(long hoaxId, String username, ParameterizedTypeReference<T> responseType) {
+        String path = "/api/1.0/users/" + username + "/hoaxes/" + hoaxId + "?direction=after&count=true";
         return testRestTemplate.exchange(path, HttpMethod.GET,null, responseType);
     }
 
